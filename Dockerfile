@@ -2,7 +2,7 @@ FROM ubuntu:14.04
 MAINTAINER Alfredo Amatriain <geralt@gmail.com>
 
 # Install packages
-RUN apt-get update 
+RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install supervisor 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install git 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install apache2 
@@ -13,6 +13,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install pwgen
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install php-apc
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install php5-gd
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install php5-mcrypt
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y install php5-curl
 
 # Add image configuration and scripts
 ADD start-apache2.sh /start-apache2.sh
