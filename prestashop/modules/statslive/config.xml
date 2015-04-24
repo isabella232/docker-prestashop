@@ -2,8 +2,8 @@
 <module>
 	<name>statslive</name>
 	<displayName><![CDATA[Visitors online]]></displayName>
-	<version><![CDATA[1.2.2]]></version>
-	<description><![CDATA[Adds a list of customers and visitors who are currently online to the Stats dashboard.]]></description>
+	<version><![CDATA[1]]></version>
+	<description><![CDATA[Display the list of customers and visitors currently online.]]></description>
 	<author><![CDATA[PrestaShop]]></author>
 	<tab><![CDATA[analytics_stats]]></tab>
 	<is_configurable>0</is_configurable>

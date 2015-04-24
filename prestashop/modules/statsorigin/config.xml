@@ -2,8 +2,8 @@
 <module>
 	<name>statsorigin</name>
 	<displayName><![CDATA[Visitors origin]]></displayName>
-	<version><![CDATA[1.3.1]]></version>
-	<description><![CDATA[Adds a graph displaying the websites your visitors came from to the Stats dashboard.]]></description>
+	<version><![CDATA[1]]></version>
+	<description><![CDATA[Display the websites your visitors come from.]]></description>
 	<author><![CDATA[PrestaShop]]></author>
 	<tab><![CDATA[analytics_stats]]></tab>
 	<is_configurable>0</is_configurable>

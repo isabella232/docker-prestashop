@@ -1,6 +1,6 @@
 <?php
 /*
-* 2007-2014 PrestaShop
+* 2007-2013 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -19,23 +19,25 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2014 PrestaShop SA
+*  @copyright  2007-2013 PrestaShop SA
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-/**
- * @deprecated 1.5.0 This file is deprecated, use moduleFrontController instead
- */
-
 /* SSL Management */
 $useSSL = true;
 
-require('../../config/config.inc.php');
-Tools::displayFileAsDeprecated();
+include(dirname(__FILE__).'/../../config/config.inc.php');
+include(dirname(__FILE__).'/../../header.php');
+include(dirname(__FILE__).'/bankwire.php');
 
-// init front controller in order to use Tools::redirect
-$controller = new FrontController();
-$controller->init();
+if (!$cookie->isLogged(true))
+	Tools::redirect('authentication.php?back=order.php');
+elseif (!Customer::getAddressesTotalById((int)($cookie->id_customer)))
+	Tools::redirect('address.php?back=order.php?step=1');
 
-Tools::redirect(Context::getContext()->link->getModuleLink('bankwire', 'payment'));
+$bankwire = new BankWire();
+echo $bankwire->execPayment($cart);
+
+include_once(dirname(__FILE__).'/../../footer.php');
+

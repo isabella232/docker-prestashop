@@ -1,6 +1,6 @@
 <?php
 /*
-* 2007-2014 PrestaShop
+* 2007-2013 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -19,7 +19,7 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2014 PrestaShop SA
+*  @copyright  2007-2013 PrestaShop SA
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
@@ -30,40 +30,37 @@ if (!defined('_PS_VERSION_'))
 class StatsOrigin extends ModuleGraph
 {
 	private $_html;
-
+	
 	public function __construct()
 	{
 		$this->name = 'statsorigin';
 		$this->tab = 'analytics_stats';
-		$this->version = '1.3.1';
+		$this->version = 1.0;
 		$this->author = 'PrestaShop';
 		$this->need_instance = 0;
 
 		parent::__construct();
 
 		$this->displayName = $this->l('Visitors origin');
-		$this->description = $this->l('Adds a graph displaying the websites your visitors came from to the Stats dashboard.');
-		$this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+		$this->description = $this->l('Display the websites your visitors come from.');
 	}
 
 	public function install()
 	{
-		return (parent::install() && $this->registerHook('AdminStatsModules'));
+		return (parent::install() AND $this->registerHook('AdminStatsModules'));
 	}
 
 	private function getOrigins($dateBetween)
 	{
 		$directLink = $this->l('Direct link');
-		$sql = 'SELECT http_referer
-				FROM '._DB_PREFIX_.'connections
-				WHERE 1
-					'.Shop::addSqlRestriction().'
-					AND date_add BETWEEN '.$dateBetween;
-		$result = Db::getInstance(_PS_USE_SQL_SLAVE_)->query($sql);
+		$result = Db::getInstance(_PS_USE_SQL_SLAVE_)->ExecuteS('
+		SELECT c.http_referer
+		FROM '._DB_PREFIX_.'connections c
+		WHERE c.date_add BETWEEN '.$dateBetween, false);
 		$websites = array($directLink => 0);
 		while ($row = Db::getInstance(_PS_USE_SQL_SLAVE_)->nextRow($result))
 		{
-			if (!isset($row['http_referer']) || empty($row['http_referer']))
+			if (!isset($row['http_referer']) OR empty($row['http_referer']))
 				++$websites[$directLink];
 			else
 			{
@@ -84,63 +81,45 @@ class StatsOrigin extends ModuleGraph
 		if (Tools::getValue('export'))
 			if (Tools::getValue('exportType') == 'top')
 				$this->csvExport(array('type' => 'pie'));
-		$this->_html = '<div class="panel-heading">'.$this->l('Origin').'</div>';
-		if (count($websites))
+		$this->_html = '<fieldset class="width3"><legend><img src="../modules/'.$this->name.'/logo.gif" /> '.$this->l('Origin').'</legend>';
+		if (sizeof($websites))
 		{
 			$this->_html .= '
-			<div class="alert alert-info">
-				'.$this->l('In the tab, we break down the 10 most popular referral websites that bring customers to your online store.').'
-			</div>
-			<h4>'.$this->l('Guide').'</h4>
-			<div class="alert alert-warning">
-				<h4>'.$this->l('What is a referral website?').'</h4>
-				<p>
-					'.$this->l('The referrer is the URL of the previous webpage from which a link was followed by the visitor.').'<br />
-					'.$this->l('A referrer also enables you to know which keywords visitors use in search engines when browsing for your online store.').'<br /><br />
-					'.$this->l('A referrer can be:').'
-				</p>
-				<ul>
-					<li>'.$this->l('Someone who posts a link to your shop.').'</li>
-					<li>'.$this->l('A partner who has agreed to a link exchange in order to attract new customers.').'</li>
-				</ul>
-			</div>
-			<div class="row row-margin-bottom">
-				<div class="col-lg-12">
-					<div class="col-lg-8">
-						'.$this->engine(array('type' => 'pie')).'
-					</div>
-					<div class="col-lg-4">
-						<a href="'.Tools::safeOutput($_SERVER['REQUEST_URI'].'&export=1&exportType=top').'" class="btn btn-default">
-							<i class="icon-cloud-upload"></i> '.$this->l('CSV Export').'
-						</a>
-					</div>
-				</div>
-			</div>
-			<table class="table">
-				<thead>
-					<tr>
-						<th><span class="title_box active">'.$this->l('Origin').'</span></th>
-						<th><span class="title_box active">'.$this->l('Total').'</span></th>
-					</tr>
-				</thead>
-				<tbody>';
+			<center><p><img src="../img/admin/down.gif" />'. $this->l('Here is the percentage of the 10 most popular referrer websites by which visitors went through to get to your shop.').'</p>
+			'.ModuleGraph::engine(array('type' => 'pie')).'</center>
+			<p><a href="'.Tools::safeOutput($_SERVER['REQUEST_URI']).'&export=1&exportType=top"><img src="../img/admin/asterisk.gif" />'.$this->l('CSV Export').'</a></p><br /><br />
+			<div style="overflow-y: scroll; height: 600px;">
+			<center>
+			<table class="table " border="0" cellspacing="0" cellspacing="0">
+				<tr>
+					<th style="width:400px;">'.$this->l('Origin').'</th>
+					<th style="width:50px; text-align: right">'.$this->l('Total').'</th>
+				</tr>';
 			foreach ($websites as $website => $total)
-				$this->_html .= '
-					<tr>
-						<td>'.(!strstr($website, ' ') ? '<a href="'.Tools::getProtocol().$website.'">' : '').$website.(!strstr($website, ' ') ? '</a>' : '').'</td><td>'.$total.'</td>
-					</tr>';
-			$this->_html .= '
-				</tbody>
-			</table>';
+				$this->_html .= '<tr><td>'.(!strstr($website, ' ') ? '<a href="'.Tools::getProtocol().$website.'">' : '').$website.(!strstr($website, ' ') ? '</a>' : '').'</td><td style="text-align: right">'.$total.'</td></tr>';
+			$this->_html .= '</table></center></div>';
 		}
 		else
-			$this->_html .= '<p>'.$this->l('Direct links only').'</p>';
+			$this->_html .= '<p><strong>'.$this->l('Direct links only').'</strong></p>';
+		$this->_html .= '</fieldset><br />
+		<fieldset class="width3"><legend><img src="../img/admin/comment.gif" /> '.$this->l('Guide').'</legend>
+		<h2>'.$this->l('What is a referrer website?').'</h2>
+			<p>
+				'.$this->l('When visiting a webpage, the referrer is the URL of the previous webpage from which a link was followed.').'<br />
+				'.$this->l('A referrer enables you to know which keywords are entered by visitors in search engines when getting to your shop and allows you to optimize web promotion.').'<br /><br />
+				'. $this->l('A referrer can be:').'
+				<ul>
+					<li class="bullet">'. $this->l('Someone who put a link on their website for your shop').'</li>
+					<li class="bullet">'. $this->l('A partner with whom you made a link exchange in order to bring in sales or attract new customers').'</li>
+				</ul>
+			</p>
+		</fieldset>';
 		return $this->_html;
 	}
-
+		
 	protected function getData($layers)
 	{
-		$this->_titles['main'] = $this->l('Top ten referral websites');
+		$this->_titles['main'] = $this->l('First 10 websites');
 		$websites = $this->getOrigins($this->getDate());
 		$total = 0;
 		$total2 = 0;

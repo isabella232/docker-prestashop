@@ -2,8 +2,8 @@
 <module>
 	<name>statsbestmanufacturers</name>
 	<displayName><![CDATA[Best manufacturers]]></displayName>
-	<version><![CDATA[1.4.1]]></version>
-	<description><![CDATA[Adds a list of the best manufacturers to the Stats dashboard.]]></description>
+	<version><![CDATA[1.0]]></version>
+	<description><![CDATA[A list of the best manufacturers]]></description>
 	<author><![CDATA[PrestaShop]]></author>
 	<tab><![CDATA[analytics_stats]]></tab>
 	<is_configurable>0</is_configurable>

@@ -1,23 +1,15 @@
+Hi {firstname} {lastname},
 
-[{shop_url}] 
+Your order is currently in transit.
 
-Hi {firstname} {lastname}, 
+You can track your package by clicking on the following link: {followup}
 
-Your order with the reference {order_name} is currently in transit. 
+You can also review this order and download your invoice from the "Order history" section of your account by clicking "My account" on our Website. 
 
-You can track your package using the following link: {followup}
-[{followup}] 		 
+Thank you for shopping with {shop_name}!
 
-You can review your order and download your invoice from the
-"Order history" [{history_url}] section of your
-customer account by clicking "My account"
-[{my_account_url}] on our shop. 
+{shop_name} - {shop_url}
 
-If you have a guest account, you can follow your order via the
-"Guest Tracking"
-[{guest_tracking_url}?id_order={order_name}] section
-on our shop. 
 
-{shop_name} [{shop_url}] powered by
-PrestaShop(tm) [http://www.prestashop.com/] 
 
+{shop_url} powered by PrestaShop™

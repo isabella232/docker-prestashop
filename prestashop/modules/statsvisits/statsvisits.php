@@ -1,6 +1,6 @@
 <?php
 /*
-* 2007-2014 PrestaShop
+* 2007-2013 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -19,7 +19,7 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2014 PrestaShop SA
+*  @copyright  2007-2013 PrestaShop SA
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
@@ -29,108 +29,78 @@ if (!defined('_PS_VERSION_'))
 
 class StatsVisits extends ModuleGraph
 {
-	private $html = '';
-	private $query = '';
+	private $_html = '';
+	private $_query = '';
+	private $_query2 = '';
+	private $_option;
 
 	public function __construct()
 	{
 		$this->name = 'statsvisits';
 		$this->tab = 'analytics_stats';
-		$this->version = '1.5.1';
+		$this->version = 1.0;
 		$this->author = 'PrestaShop';
 		$this->need_instance = 0;
 
 		parent::__construct();
 
 		$this->displayName = $this->l('Visits and Visitors');
-		$this->description = $this->l('Adds statistics about your visits and visitors to the Stats dashboard.');
-		$this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+		$this->description = $this->l('Display statistics about your visits and visitors.');
 	}
-
+	
 	public function install()
 	{
-		return parent::install() && $this->registerHook('AdminStatsModules');
+		return (parent::install() AND $this->registerHook('AdminStatsModules'));
 	}
-
+	
 	public function getTotalVisits()
 	{
-		$sql = 'SELECT COUNT(c.`id_connections`)
-				FROM `'._DB_PREFIX_.'connections` c
-				WHERE c.`date_add` BETWEEN '.ModuleGraph::getDateBetween().'
-					'.Shop::addSqlRestriction(false, 'c');
-
-		return Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($sql);
+		return Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue('
+		SELECT COUNT(c.`id_connections`)
+		FROM `'._DB_PREFIX_.'connections` c
+		WHERE c.`date_add` BETWEEN '.ModuleGraph::getDateBetween());
 	}
-
+	
 	public function getTotalGuests()
 	{
-		$sql = 'SELECT COUNT(DISTINCT c.`id_guest`)
-				FROM `'._DB_PREFIX_.'connections` c
-				WHERE c.`date_add` BETWEEN '.ModuleGraph::getDateBetween().'
-					'.Shop::addSqlRestriction(false, 'c');
-
-		return Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($sql);
+		return Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue('
+		SELECT COUNT(DISTINCT c.`id_guest`)
+		FROM `'._DB_PREFIX_.'connections` c
+		WHERE c.`date_add` BETWEEN '.ModuleGraph::getDateBetween());
 	}
-
-	public function hookAdminStatsModules()
+	
+	public function hookAdminStatsModules($params)
 	{
-		$graph_params = array(
-			'layers' => 2,
-			'type' => 'line',
-			'option' => 3,
-		);
-
-		$total_visits = $this->getTotalVisits();
-		$total_guests = $this->getTotalGuests();
+		$totalVisits = $this->getTotalVisits();
+		$totalGuests = $this->getTotalGuests();
 		if (Tools::getValue('export'))
-			$this->csvExport(array(
-				'layers' => 2,
-				'type' => 'line',
-				'option' => 3
-			));
-		$this->html = '
-		<div class="panel-heading">
-			'.$this->displayName.'
-		</div>
-		<h4>'.$this->l('Guide').'</h4>
-			<div class="alert alert-warning">
-				<h4>'.$this->l('Determine the interest of a visit').'</h4>
-				<p>
-					'.$this->l('The visitors\' evolution graph strongly resembles the visits\' graph, but provides additional information:').'<br />
-				</p>
+			$this->csvExport(array('layers' =>2, 'type' => 'line', 'option' => 3));
+		$this->_html = '
+		<fieldset class="width3"><legend><img src="../modules/'.$this->name.'/logo.gif" /> '.$this->displayName.'</legend>
+			<p><center>
+				<img src="../img/admin/down.gif" />'.$this->l('A visit corresponds to an internet user coming to your shop. Until the end of their session, only one visit is counted.').'
+				'.$this->l('A visitor is an unknown person, who has not registered or logged on, surfing on your shop. A visitor can come and visit your shop many times.').'
+			</center></p>
+			<div style="margin-top:20px"></div>
+			<p>'.$this->l('Total visits:').' '.$totalVisits.'</p>
+			<p>'.$this->l('Total visitors:').' '.$totalGuests.'</p>
+			'.($totalVisits ? ModuleGraph::engine(array('layers' => 2, 'type' => 'line', 'option' => 3)).'<p><a href="'.Tools::safeOutput($_SERVER['REQUEST_URI']).'&export=1"><img src="../img/admin/asterisk.gif" />'.$this->l('CSV Export').'</a></p>' : '').'
+			
+		</fieldset>
+		<br class="clear" />
+		<fieldset class="width3"><legend><img src="../img/admin/comment.gif" /> '.$this->l('Guide').'</legend>
+				<h2>'.$this->l('Determine the interest of a visit').'</h2>
+				'.$this->l('The visitors\' evolution graph strongly resembles the visits\' graph, but provides additional information:').'<br />
 				<ul>
-					<li>'.$this->l('If this is the case, congratulations, your website is well planned and pleasing. Glad to see that you\'ve been paying attention.').'</li>
-					<li>'.$this->l('Otherwise, the conclusion is not so simple. The problem can be aesthetic or ergonomic. It is also possible that many visitors have mistakenly visited your URL without possessing a particular interest in your shop. This strange and ever-confusing phenomenon is most likely cause by search engines. If this is the case, you should consider revising your SEO structure.').'</li>
+					<li>'.$this->l('If this is the case, congratulations, your website is well planned and pleasing.').'</li>
+					<li>'.$this->l('Otherwise, the conclusion is not so simple. The problem can be aesthetic or ergonomic, or else the offer is not sufficient. It is also possible that these visitors mistakenly came here with no particular interest for your shop; this can happen frequently when using search engines.').'</li>
 				</ul>
-				<p>
-					'.$this->l('This information is mostly qualitative. It is up to you to determine the interest of a disjointed visit.').'
-				</p>
-			</div>
-			<div class="alert alert-info">
-				'.$this->l('A visit corresponds to an internet user coming to your shop, and until the end of their session, only one visit is counted.').'
-				'.$this->l('A visitor is an unknown person who has not registered or logged into your store. A visitor can also be considered a person who has visited your shop multiple times.').'
-			</div>
-			<div class="row row-margin-bottom">
-				<div class="col-lg-12">
-					<div class="col-lg-8">
-						'.($total_visits ? $this->engine($graph_params).'
-					</div>
-					<div class="col-lg-4">
-						<ul class="list-unstyled">
-							<li>'.$this->l('Total visits:').' <span class="totalStats">'.$total_visits.'</span></li>
-							<li>'.$this->l('Total visitors:').' <span class="totalStats">'.$total_guests.'</span></li>
-						</ul>
-						<hr/>
-						<a class="btn btn-default export-csv" href="'.Tools::safeOutput($_SERVER['REQUEST_URI'].'&export=1').'">
-							<i class="icon-cloud-upload"></i> '.$this->l('CSV Export').'
-						</a> ' : '').'
-					</div>
-				</div>
-			</div>';
-
-		return $this->html;
+				'.$this->l('This information is mostly qualitative: you\'re the one that really needs to determine the interest of a one-off visit.').'<br />
+		</fieldset>';
+		
+		return $this->_html;
 	}
-
+	
 	public function setOption($option, $layers = 1)
 	{
 		switch ($option)
@@ -139,52 +109,50 @@ class StatsVisits extends ModuleGraph
 				$this->_titles['main'][0] = $this->l('Number of visits and unique visitors');
 				$this->_titles['main'][1] = $this->l('Visits');
 				$this->_titles['main'][2] = $this->l('Visitors');
-				$this->query[0] = 'SELECT date_add, COUNT(`date_add`) as total
+				$this->_query[0] = '
+					SELECT date_add, COUNT(`date_add`) as total
 					FROM `'._DB_PREFIX_.'connections`
-					WHERE 1
-						'.Shop::addSqlRestriction().'
-						AND `date_add` BETWEEN ';
-				$this->query[1] = 'SELECT date_add, COUNT(DISTINCT `id_guest`) as total
+					WHERE `date_add` BETWEEN ';
+				$this->_query[1] = '
+					SELECT date_add, COUNT(DISTINCT `id_guest`) as total
 					FROM `'._DB_PREFIX_.'connections`
-					WHERE 1
-						'.Shop::addSqlRestriction().'
-						AND `date_add` BETWEEN ';
+					WHERE `date_add` BETWEEN ';
 				break;
 		}
 	}
-
+	
 	protected function getData($layers)
 	{
 		$this->setDateGraph($layers, true);
 	}
-
+	
 	protected function setAllTimeValues($layers)
 	{
 		for ($i = 0; $i < $layers; $i++)
 		{
-			$result = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($this->query[$i].$this->getDate().' GROUP BY LEFT(date_add, 4)');
-			foreach ($result as $row)
-				$this->_values[$i][(int)Tools::substr($row['date_add'], 0, 4)] = (int)$row['total'];
+			$result = Db::getInstance(_PS_USE_SQL_SLAVE_)->ExecuteS($this->_query[$i].$this->getDate().' GROUP BY LEFT(date_add, 4)');
+			foreach ($result AS $row)
+				$this->_values[$i][(int)(substr($row['date_add'], 0, 4))] = (int)($row['total']);
 		}
 	}
-
+	
 	protected function setYearValues($layers)
 	{
 		for ($i = 0; $i < $layers; $i++)
 		{
-			$result = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($this->query[$i].$this->getDate().' GROUP BY LEFT(date_add, 7)');
-			foreach ($result as $row)
-				$this->_values[$i][(int)Tools::substr($row['date_add'], 5, 2)] = (int)$row['total'];
+			$result = Db::getInstance(_PS_USE_SQL_SLAVE_)->ExecuteS($this->_query[$i].$this->getDate().' GROUP BY LEFT(date_add, 7)');
+			foreach ($result AS $row)
+				$this->_values[$i][(int)(substr($row['date_add'], 5, 2))] = (int)($row['total']);
 		}
 	}
-
+	
 	protected function setMonthValues($layers)
 	{
 		for ($i = 0; $i < $layers; $i++)
 		{
-			$result = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($this->query[$i].$this->getDate().' GROUP BY LEFT(date_add, 10)');
-			foreach ($result as $row)
-				$this->_values[$i][(int)Tools::substr($row['date_add'], 8, 2)] = (int)$row['total'];
+			$result = Db::getInstance(_PS_USE_SQL_SLAVE_)->ExecuteS($this->_query[$i].$this->getDate().' GROUP BY LEFT(date_add, 10)');
+			foreach ($result AS $row)
+				$this->_values[$i][(int)(substr($row['date_add'], 8, 2))] = (int)($row['total']);
 		}
 	}
 
@@ -192,9 +160,11 @@ class StatsVisits extends ModuleGraph
 	{
 		for ($i = 0; $i < $layers; $i++)
 		{
-			$result = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($this->query[$i].$this->getDate().' GROUP BY LEFT(date_add, 13)');
-			foreach ($result as $row)
-				$this->_values[$i][(int)Tools::substr($row['date_add'], 11, 2)] = (int)$row['total'];
+			$result = Db::getInstance(_PS_USE_SQL_SLAVE_)->ExecuteS($this->_query[$i].$this->getDate().' GROUP BY LEFT(date_add, 13)');
+			foreach ($result AS $row)
+				$this->_values[$i][(int)(substr($row['date_add'], 11, 2))] = (int)($row['total']);
 		}
 	}
 }
+
+

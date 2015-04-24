@@ -1,6 +1,6 @@
 <?php
 /*
-* 2007-2014 PrestaShop
+* 2007-2013 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -19,7 +19,7 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2014 PrestaShop SA
+*  @copyright  2007-2013 PrestaShop SA
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
@@ -33,81 +33,60 @@ class BlockMyAccount extends Module
 	{
 		$this->name = 'blockmyaccount';
 		$this->tab = 'front_office_features';
-		$this->version = '1.3.1';
+		$this->version = '1.2';
 		$this->author = 'PrestaShop';
 		$this->need_instance = 0;
 
 		parent::__construct();
 
 		$this->displayName = $this->l('My Account block');
-		$this->description = $this->l('Displays a block with links relative to a user\'s account.');
-		$this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+		$this->description = $this->l('Displays a block with links relative to user account.');
 	}
 
 	public function install()
 	{
-		if (!$this->addMyAccountBlockHook() 
-			|| !parent::install() 
-			|| !$this->registerHook('displayLeftColumn') 
-			|| !$this->registerHook('displayHeader')
-			|| !$this->registerHook('actionModuleRegisterHookAfter')
-			|| !$this->registerHook('actionModuleUnRegisterHookAfter'))
+		if (!$this->addMyAccountBlockHook() OR !parent::install() OR !$this->registerHook('leftColumn') OR !$this->registerHook('header'))
 			return false;
 		return true;
 	}
 
 	public function uninstall()
 	{
-		return (parent::uninstall() && $this->removeMyAccountBlockHook());
+		return (parent::uninstall() AND $this->removeMyAccountBlockHook());
 	}
 
-	public function hookActionModuleUnRegisterHookAfter($params)
+	public function hookLeftColumn($params)
 	{
-		return $this->hookActionModuleRegisterHookAfter($params);
-	}
-
-	public function hookActionModuleRegisterHookAfter($params)
-	{
-		if ($params['hook_name'] == 'displayMyAccountBlock')
-			$this->_clearCache('blockmyaccount.tpl');
-	}
-
-	public function hookDisplayLeftColumn($params)
-	{
-		if (!$this->context->customer->isLogged())
+		global $smarty;
+		
+		if (!$params['cookie']->isLogged())
 			return false;
-
-		$this->smarty->assign(array(
-			'voucherAllowed' => CartRule::isFeatureActive(),
-			'returnAllowed' => (int)Configuration::get('PS_ORDER_RETURN'),
-			'HOOK_BLOCK_MY_ACCOUNT' => Hook::exec('displayMyAccountBlock'),
+		$smarty->assign(array(
+			'voucherAllowed' => (int)(Configuration::get('PS_VOUCHERS')),
+			'returnAllowed' => (int)(Configuration::get('PS_ORDER_RETURN')),
+			'HOOK_BLOCK_MY_ACCOUNT' => Module::hookExec('myAccountBlock')
 		));
 		return $this->display(__FILE__, $this->name.'.tpl');
 	}
 
-	public function hookDisplayRightColumn($params)
+	public function hookRightColumn($params)
 	{
-		return $this->hookDisplayLeftColumn($params);
-	}
-	
-	public function hookDisplayFooter($params)
-	{
-		return $this->hookDisplayLeftColumn($params);
+		return $this->hookLeftColumn($params);
 	}
 
 	private function addMyAccountBlockHook()
 	{
-		return Db::getInstance()->execute('INSERT IGNORE INTO `'._DB_PREFIX_.'hook` (`name`, `title`, `description`, `position`) VALUES (\'displayMyAccountBlock\', \'My account block\', \'Display extra informations inside the "my account" block\', 1)');
+		return Db::getInstance()->Execute('INSERT INTO `'._DB_PREFIX_.'hook` (`name`, `title`, `description`, `position`) VALUES (\'myAccountBlock\', \'My account block\', \'Display extra informations inside the "my account" block\', 1)');
 	}
 
 	private function removeMyAccountBlockHook()
 	{
-		return Db::getInstance()->execute('DELETE FROM `'._DB_PREFIX_.'hook` WHERE `name` = \'displayMyAccountBlock\'');
+		return Db::getInstance()->Execute('DELETE FROM `'._DB_PREFIX_.'hook` WHERE `name` = \'myAccountBlock\'');
 	}
 
-	public function hookDisplayHeader($params)
+	public function hookHeader($params)
 	{
-		$this->context->controller->addCSS(($this->_path).'blockmyaccount.css', 'all');
+		Tools::addCSS(($this->_path).'blockmyaccount.css', 'all');
 	}
 }
 

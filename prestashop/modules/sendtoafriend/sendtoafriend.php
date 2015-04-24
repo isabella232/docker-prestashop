@@ -1,6 +1,6 @@
 <?php
 /*
-* 2007-2014 PrestaShop
+* 2007-2013 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -19,7 +19,7 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2014 PrestaShop SA
+*  @copyright  2007-2013 PrestaShop SA
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
@@ -29,62 +29,113 @@ if (!defined('_PS_VERSION_'))
 
 class sendToAFriend extends Module
 {
-	private $_html = '';
-	private $_postErrors = array();
-	public $context;
-
-	function __construct($dontTranslate = false)
- 	{
- 	 	$this->name = 'sendtoafriend';
-		$this->version = '1.7.2';
+	public function __construct($dontTranslate = false)
+	{
+		$this->name = 'sendtoafriend';
+		$this->version = '1.1';
 		$this->author = 'PrestaShop';
- 	 	$this->tab = 'front_office_features';
+		$this->tab = 'front_office_features';
 		$this->need_instance = 0;
-		$this->secure_key = Tools::encrypt($this->name);
 
 		parent::__construct();
 
-		if (!$dontTranslate)
+		if(!$dontTranslate)
 		{
 			$this->displayName = $this->l('Send to a Friend module');
 			$this->description = $this->l('Allows customers to send a product link to a friend.');
- 		}
-		$this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+		}
 	}
 
 	public function install()
 	{
-	 	return (parent::install() && $this->registerHook('extraLeft') && $this->registerHook('header'));
-	}
-
-	public function uninstall()
-	{
-		return (parent::uninstall() && $this->unregisterHook('header') && $this->unregisterHook('extraLeft'));
+		return (parent::install() AND $this->registerHook('extraLeft'));
 	}
 
 	public function hookExtraLeft($params)
 	{
-		/* Product informations */
-		$product = new Product((int)Tools::getValue('id_product'), false, $this->context->language->id);
-		$image = Product::getCover((int)$product->id);
+		global $smarty;
+		$smarty->assign('this_path', $this->_path);
+		return $this->display(__FILE__, 'product_page.tpl');
+	}
+	
+	public function displayPageForm()
+	{
+		if (!$this->active)
+			Tools::display404Error();
 
-
-		$this->context->smarty->assign(array(
-			'stf_product' => $product,
-			'stf_product_cover' => (int)$product->id.'-'.(int)$image['id_image'],
-			'stf_secure_key' => $this->secure_key
-		));
-
-		return $this->display(__FILE__, 'sendtoafriend-extra.tpl');
+		include(dirname(__FILE__).'/../../header.php');
+		echo $this->displayFrontForm();
+		include(dirname(__FILE__).'/../../footer.php');
 	}
 
-	public function hookHeader($params)
+	public function displayFrontForm()
 	{
-		$this->page_name = Dispatcher::getInstance()->getController();
-		if ($this->page_name == 'product')
+		global $smarty;
+		$error = false;
+		$confirm = false;
+
+		if (isset($_POST['submitAddtoafriend']))
 		{
-			$this->context->controller->addCSS($this->_path.'sendtoafriend.css', 'all');
-			$this->context->controller->addJS($this->_path.'sendtoafriend.js');
+			global $cookie, $link;
+			/* Product informations */
+			$product = new Product((int)Tools::getValue('id_product'), false, (int)$cookie->id_lang);
+			$productLink = $link->getProductLink($product);
+
+			/* Fields verifications */
+			if (empty($_POST['email']) || empty($_POST['name']))
+				$error = $this->l('You must fill in all fields.');
+			elseif (empty($_POST['email']) || !Validate::isEmail($_POST['email']))
+				$error = $this->l('Your friend\'s email is invalid.');
+			elseif (!Validate::isName($_POST['name']))
+				$error = $this->l('Your friend\'s name is invalid.');
+			elseif (!isset($_GET['id_product']) || !is_numeric($_GET['id_product']))
+				$error = $this->l('An error occurred during the process.');
+			else
+			{
+				/* Email generation */
+				$subject = ($cookie->customer_firstname ? $cookie->customer_firstname.' '.$cookie->customer_lastname : $this->l('A friend')).' '.$this->l('sent you a link to').' '.$product->name;
+				$templateVars = array(
+					'{product}' => $product->name,
+					'{product_link}' => $productLink,
+					'{customer}' => ($cookie->customer_firstname ? $cookie->customer_firstname.' '.$cookie->customer_lastname : $this->l('A friend')),
+					'{name}' => Tools::safeOutput($_POST['name'])
+				);
+
+				/* Email sending */
+				if (!Mail::Send((int)$cookie->id_lang, 'send_to_a_friend', Mail::l('A friend sent you a link to', (int)$cookie->id_lang).' '.$product->name, $templateVars, $_POST['email'], NULL, ($cookie->email ? $cookie->email : NULL), ($cookie->customer_firstname ? $cookie->customer_firstname.' '.$cookie->customer_lastname : NULL), NULL, NULL, dirname(__FILE__).'/mails/'))
+					$error = $this->l('An error occurred during the process.');
+				else
+					Tools::redirect(_MODULE_DIR_.'/'.$this->name.'/sendtoafriend-form.php?id_product='.(int)$product->id.'&submited');
+			}
 		}
+		else
+		{
+			global $cookie, $link;
+			/* Product informations */
+			$product = new Product((int)Tools::getValue('id_product'), false, (int)$cookie->id_lang);
+			$productLink = $link->getProductLink($product);
+		}
+
+		/* Image */
+		$images = $product->getImages((int)$cookie->id_lang);
+		foreach ($images AS $k => $image)
+			if ($image['cover'])
+			{
+				$cover['id_image'] = (int)$product->id.'-'.(int)$image['id_image'];
+				$cover['legend'] = $image['legend'];
+			}
+
+		if (!isset($cover))
+			$cover = array('id_image' => Language::getIsoById((int)$cookie->id_lang).'-default', 'legend' => 'No picture');
+
+		$smarty->assign(array(
+			'cover' => $cover,
+			'errors' => $error,
+			'confirm' => $confirm,
+			'product' => $product,
+			'productLink' => $productLink
+		));
+
+		return $this->display(__FILE__, 'sendtoafriend.tpl');
 	}
 }

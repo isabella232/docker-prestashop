@@ -1,20 +1,12 @@
+Your message has been correctly sent to our Customer Service.
 
-[{shop_url}] 
+Your message:
 
-Your message to {shop_name} Customer Service 
+{message}
 
-Your message has been sent successfully.
 
-MESSAGE: {message}
+We will answer as soon as possible.
 
-ORDER ID: {order_name}
+Regards,
 
-PRODUCT: {product_name}
-
-ATTACHED FILE: {attached_file} 		 
-
-We will answer as soon as possible. 
-
-{shop_name} [{shop_url}] powered by
-PrestaShop(tm) [http://www.prestashop.com/] 
-
+{shop_url} powered by PrestaShop™

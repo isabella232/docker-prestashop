@@ -1,16 +1,15 @@
+Hi {firstname} {lastname},
 
-[{shop_url}] 
+You have received a message from a customer via your shop: {shop_name}
 
-Message from a {shop_name} customer 
+Details of message:
 
-CUSTOMER E-MAIL ADDRESS: {email}
+E-mail address: {email}
 
-CUSTOMER MESSAGE: {message}
+Message:
 
-ORDER ID: {order_name}
+{message}
 
-ATTACHED FILE: {attached_file} 		 
 
-{shop_name} [{shop_url}] powered by
-PrestaShop(tm) [http://www.prestashop.com/] 
 
+{shop_url} powered by PrestaShop™

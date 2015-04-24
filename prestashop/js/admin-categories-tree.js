@@ -1,5 +1,5 @@
 /*
-* 2007-2015 PrestaShop
+* 2007-2013 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -18,86 +18,67 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2015 PrestaShop SA
+*  @copyright  2007-2013 PrestaShop SA
 *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
-
-/**
- * Deprecated since 1.6.0.4
- */
 
 var readyToExpand = true;
 var needCheckAll = false;
 var needUncheckAll = false;
 var interval = null;
 var intervalCheck = null;
-var id_tree = 0;
+var id = 0;
 var arrayCatToExpand = new Array();
-var id_category_root = 0;
 
-function buildTreeView()
-{
-	use_shop_context = 0;
-	if (buildTreeView.arguments[0] && buildTreeView.arguments[0] == 1)
-		use_shop_context = 1;
+$(document).ready(function(){
 	$("#categories-treeview").treeview({
 		url : 'ajax.php',
 		toggle: function () { callbackToggle($(this)); },
 		ajax : {
 			type: 'POST',
-			async: false,
+			async: true,
 			data: {
 				getChildrenCategories : true,
-				use_shop_context : use_shop_context,
 				selectedCat: selectedCat
 			}
 		}
 	});
-	id_category_root = $('#categories-treeview li:first').attr('id');
-	$('#categories-treeview li#'+id_category_root+' span').trigger('click');
-	$('#categories-treeview li#'+id_category_root).children('div').remove();
-	$('#categories-treeview li#'+id_category_root).
+	
+	$('#categories-treeview li#1 span').trigger('click');
+	$('#categories-treeview li#1').children('div').remove();
+	$('#categories-treeview li#1').
 		removeClass('collapsable lastCollapsable').
 		addClass('last static');
-
-	disabled = $('#categories-treeview li:first input[type=checkbox]').attr('disabled');
-	$('#categories-treeview input[type=checkbox]').attr('disabled', disabled);
-
+	
 	$('#expand_all').click( function () {
 		expandAllCategories();
 		return false;
 	});
-
+	
 	$('#collapse_all').click( function () {
 		collapseAllCategories();
 		return false;
 	});
-
+	
 	$('#check_all').click( function () {
 		needCheckAll = true;
 		checkAllCategories();
 		return false;
 	});
-
+	
 	$('#uncheck_all').click( function () {
 		needUncheckAll = true;
 		uncheckAllCategories();
 		return false;
-	});
-
-	// check if checkboxes need to be disabled or not
-	$('.expandable').click(function(){
-		disabled = $('#categories-treeview li:first input[type=checkbox]').attr('disabled');
-		$('#categories-treeview input[type=checkbox]').attr('disabled', disabled);
-	});
-}
+	});	
+});
 
 function callbackToggle(element)
 {
 	if (!element.is('.expandable'))
 		return false;
-
+	
 	if (element.children('ul').children('li.collapsable').length != 0)
 		closeChildrenCategories(element);
 }
@@ -113,11 +94,11 @@ function closeChildrenCategories(element)
 		var level = $(this).children('span.category_level').html();
 		if (arrayLevel[level] == undefined)
 			arrayLevel[level] = new Array();
-
+		
 		arrayLevel[level].push($(this).attr('id'));
 	});
 
-	for(i=arrayLevel.length-1;i>=0;i--)
+	for(i=arrayLevel.length-1;i!=0;i--)
 		if (arrayLevel[i] != undefined)
 			for(j=0;j<arrayLevel[i].length;j++)
 			{
@@ -129,14 +110,14 @@ function closeChildrenCategories(element)
 function setCategoryToExpand()
 {
 	var ret = false;
-
-	id_tree = 0;
+	
+	id = 0;
 	arrayCatToExpand = new Array();
 	$('#categories-treeview').find('li.expandable:visible').each(function() {
 		arrayCatToExpand.push($(this).attr('id'));
 		ret = true;
 	});
-
+	
 	return ret;
 }
 
@@ -151,8 +132,8 @@ function expandAllCategories()
 	if (!needExpandAllCategories())
 		return;
 	// force to open main category
-	if ($('li#'+id_category_root).is('.expandable'))
-		$('li#'+id_category_root).children('span.folder').trigger('click');
+	if ($('li#1').is('.expandable'))
+		$('li#1').children('span.folder').trigger('click');
 	readyToExpand = true;
 	if (setCategoryToExpand())
 		interval = setInterval(openCategory, 10);
@@ -162,7 +143,7 @@ function openCategory()
 {
 	// Check readyToExpand in order to don't clearInterval if AJAX request is in progress
 	// readyToExpand = category has been expanded, go to next ;)
-	if (id_tree >= arrayCatToExpand.length && readyToExpand)
+	if (id >= arrayCatToExpand.length && readyToExpand)
 	{
 		if (!setCategoryToExpand())
 		{
@@ -184,19 +165,19 @@ function openCategory()
 		else
 			readyToExpand = true;
 	}
-
+	
 	if (readyToExpand)
 	{
-		if ($('#categories-treeview').find('li#'+arrayCatToExpand[id_tree]+'.hasChildren').length > 0)
+		if ($('#categories-treeview').find('li#'+arrayCatToExpand[id]+'.hasChildren').length > 0)
 			readyToExpand = false;
-		$('#categories-treeview').find('li#'+arrayCatToExpand[id_tree]+'.expandable:visible span.category_label').trigger('click');
-		id_tree++;
+		$('#categories-treeview').find('li#'+arrayCatToExpand[id]+'.expandable:visible span.category_label').trigger('click');
+		id++;
 	}
 }
 
 function collapseAllCategories()
 {
-	closeChildrenCategories($('li#'+id_category_root));
+	closeChildrenCategories($('li#1'));
 }
 
 function checkAllCategories()
@@ -206,7 +187,7 @@ function checkAllCategories()
 	else
 	{
 		$('input[name="categoryBox[]"]').not(':checked').each(function () {
-			$(this).attr('checked', true);
+			$(this).attr('checked', 'checked');
 			clickOnCategoryBox($(this));
 		});
 	}
@@ -218,7 +199,7 @@ function uncheckAllCategories()
 		expandAllCategories();
 	else
 	{
-		$('input[name="categoryBox[]"]:checked').each(function () {
+		$('input[name="categoryBox[]"]:checked').each(function () { 
 			$(this).removeAttr('checked');
 			clickOnCategoryBox($(this));
 		});
@@ -264,21 +245,20 @@ function updateNbSubCategorySelected(category, add)
 		var newValue = parseInt(parentNbSubCategorySelected)+1;
 	else
 		var newValue = parseInt(parentNbSubCategorySelected)-1;
-
+	
 	currentSpan.children('.nb_sub_cat_selected_value').html(newValue);
 	currentSpan.children('.nb_sub_cat_selected_word').html(selectedLabel);
-
+	
 	if (newValue == 0)
 		currentSpan.hide();
 	else
 		currentSpan.show();
-
+	
 	if (currentSpan.parent().children('.nb_sub_cat_selected').length != 0)
 		updateNbSubCategorySelected(currentSpan.parent().children('input'), add);
 }
 
-function searchCategory()
-{
+$(document).ready( function() {
 	var category_to_check;
 	if ($('#search_cat').length)
 	{
@@ -292,70 +272,70 @@ function searchCategory()
 			scroll:false,
 			cacheLength:0,
 			multipleSeparator:'||',
-			formatItem: function(item)
+			formatItem: function(item) 
 			{
 				return item[1]+' - '+item[0];
 			}
 		}).result(function(event, item)
-		{
+		{ 
 			parent_ids = getParentCategoriesIdAndOpen(item[1]);
 		});
 	}
-}
+});
 
 function getParentCategoriesIdAndOpen(id_category)
 {
 	category_to_check = id_category;
 	$.ajax({
-		type: 'POST',
-		url: 'ajax.php',
-		async: true,
-		dataType: 'json',
-		data: 'ajax=true&getParentCategoriesId=true&id_category=' + id_category ,
-		success: function(jsonData) {
-			for(var i= 0; i < jsonData.length; i++)
-				if (jsonData[i].id_category != 1)
-					arrayCatToExpand.push(jsonData[i].id_category);
-			readyToExpand = true;
+        type: 'POST',
+        url: 'ajax.php',
+        async: true,
+        dataType: 'json',
+        data: 'ajax=true&getParentCategoriesId=true&id_category=' + id_category ,
+        success: function(jsonData) {
+            for(var i= 0; i < jsonData.length; i++)
+			    if (jsonData[i].id_category != 1)
+			    	arrayCatToExpand.push(jsonData[i].id_category);
+			readyToExpand = true;   	
 			interval = setInterval(openParentCategories, 10);
-			intervalCheck = setInterval(checkCategory, 20);
-		},
-		error: function(XMLHttpRequest, textStatus, errorThrown) {
-			jAlert("TECHNICAL ERROR: \n\nDetails:\nError thrown: " + XMLHttpRequest + "\n" + 'Text status: ' + textStatus);
-		}
-	});
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
+            alert("TECHNICAL ERROR: \n\nDetails:\nError thrown: " + XMLHttpRequest + "\n" + 'Text status: ' + textStatus);
+        }
+    });
 }
 
 function openParentCategories()
 {
-	if (id_tree >= arrayCatToExpand.length && !readyToExpand)
+	intervalCheck = setInterval(checkCategory, 20);
+	
+	if (id >= arrayCatToExpand.length && !readyToExpand)
 	{
 		clearInterval(interval);
 		// delete interval value
 		interval = null;
 		readyToExpand = false;
 	}
-
+	
 	if (readyToExpand)
 	{
-		if ($('li#'+arrayCatToExpand[id_tree]+'.hasChildren').length > 0)
+		if ($('li#'+arrayCatToExpand[id]+'.hasChildren').length > 0)
 			readyToExpand = false;
-
-		$('li#'+arrayCatToExpand[id_tree]+'.expandable span').trigger('click');
-		id_tree++;
+		$('li#'+arrayCatToExpand[id]+'.expandable span').trigger('click');
+		id++;
 	}
 }
 
 function checkCategory()
 {
-	if ($('li#'+category_to_check+' > input[type=checkbox]').prop('checked'))
+	if ($('li#'+category_to_check+' > input[type=checkbox]').attr('checked'))
 	{
 		clearInterval(intervalCheck);
 		intervalCheck = null;
 	}
 	else
 	{
-		$('li#'+category_to_check+' > input').attr('checked', true);
+		$('li#'+category_to_check+' > input').attr('checked', 'checked');
 		updateNbSubCategorySelected($('li#'+category_to_check+' > input[type=checkbox]'), true);
 	}
 }

@@ -17,7 +17,7 @@
  * @author     James Stewart <james@jystewart.net>
  * @copyright  2005 James Stewart <james@jystewart.net>
  * @license    http://www.gnu.org/copyleft/lesser.html  GNU LGPL 2.1
- * @version    CVS: $Id: RSS09.php 6844 2011-06-03 14:46:51Z dMetzger $
+ * @version    CVS: $Id$
  * @link       http://pear.php.net/package/XML_Feed_Parser/
  */
 
@@ -215,7 +215,7 @@ class XML_Feed_Parser_RSS09 extends XML_Feed_Parser_Type
      */
     public function relaxNGValidate() {
         return true;
-}
+    }
 }
 
 ?>

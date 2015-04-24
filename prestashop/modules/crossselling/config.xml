@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <module>
 	<name>crossselling</name>
-	<displayName><![CDATA[Cross-selling]]></displayName>
-	<version><![CDATA[0.9.7]]></version>
-	<description><![CDATA[Adds a &quot;Customers who bought this product also bought...&quot; section to every product page.]]></description>
+	<displayName><![CDATA[Cross Selling]]></displayName>
+	<version><![CDATA[0.1]]></version>
+	<description><![CDATA[Customers who bought this product also bought...]]></description>
 	<author><![CDATA[PrestaShop]]></author>
 	<tab><![CDATA[front_office_features]]></tab>
 	<is_configurable>1</is_configurable>

@@ -51,7 +51,7 @@
  * @author      Matt Knapp <mdknapp[at]gmail[dot]com>
  * @author      Brett Stimmerman <brettstimmerman[at]gmail[dot]com>
  * @copyright   2005 Michal Migurski
- * @version     CVS: $Id: json.php 6844 2011-06-03 14:46:51Z dMetzger $
+ * @version     CVS: $Id$
  * @license     http://www.opensource.org/licenses/bsd-license.php
  * @link        http://pear.php.net/pepr/pepr-proposal-show.php?id=198
  */
@@ -766,7 +766,7 @@ class Services_JSON
     function isError($data, $code = null)
     {
         if (class_exists('pear')) {
-            return @PEAR::isError($data, $code);
+            return PEAR::isError($data, $code);
         } elseif (is_object($data) && (get_class($data) == 'services_json_error' ||
                                  is_subclass_of($data, 'services_json_error'))) {
             return true;
